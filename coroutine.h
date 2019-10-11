@@ -29,9 +29,9 @@ struct timelist{
     timelistnode *tail;
     int n=0;
 };
-inline routine* makeroutine(void (*)());
-inline void start_routine(routine * );
-inline void co_sleep(int);
+ routine* makeroutine(void (*)());
+ void start_routine(routine * );
+ void co_sleep(int);
 void co_return();
 int co_accept(int , struct sockaddr* , socklen_t* );
 int co_read(int , void *, int );
