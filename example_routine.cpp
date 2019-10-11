@@ -8,7 +8,7 @@ using namespace std;
 void fun(){
     cout<<"我来到了fun1"<<endl;
     co_sleep(5);
-    cout<<"我回到了fun2"<<endl;
+    cout<<"我回到了fun1"<<endl;
     co_return();
 }
 void fun2(){
