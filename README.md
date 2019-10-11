@@ -25,13 +25,25 @@ int co_write(int , const void *, size_t );
 
 
 下面是一个开启协程的例子：
+
 int main(){
+
     routine *q1=makeroutine(fun);
+    
     routine *q2=makeroutine(fun2);
+    
     routine *q3=makeroutine(nets_test);
+    
     start_routine(q1);
+    
     start_routine(q2);
+    
     start_routine(q3);
+    
     cout<<"main"<<endl;
+    
     loop();//开启所有协程后调用这个函数
+    
+    
 }
+
