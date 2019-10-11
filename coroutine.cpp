@@ -18,7 +18,7 @@ static struct epoll_event evs[1000];
 static int epoll_fd;
 static int num_fd;//epoll树上的数量
 //创建一个协程，返回这个上下文
-inline routine* makeroutine(void (*func)()){
+routine* makeroutine(void (*func)()){
     if(!start_pro){
         start_pro= true;
         ucontext_t *main=(ucontext_t*)malloc(sizeof(ucontext_t));
@@ -39,12 +39,12 @@ inline routine* makeroutine(void (*func)()){
 }
 
 //开始一个协程
-inline void start_routine(routine * wanna_begin){
+void start_routine(routine * wanna_begin){
 
     pro[size++]=wanna_begin;
     swapcontext(pro[size-2]->uct,pro[size-1]->uct);
 }
-inline void co_sleep(int sec){
+ void co_sleep(int sec){
 
     //1 加入time等待链表
     if(tl==NULL){
