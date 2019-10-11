@@ -103,6 +103,7 @@ inline void co_net_wait(int fd,bool w){
 
 inline  void co_net_end(int fd){
     epoll_ctl(epoll_fd,EPOLL_CTL_DEL,fd,NULL);
+    --num_fd;
 }
  void co_close_fd(int fd){
     --num_fd;
