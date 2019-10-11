@@ -5,7 +5,7 @@
 #define SIZE_OF_STACK 1024*128//每一个协程的栈大小
 using namespace std;
 static bool start_pro=0;
-static vector<routine*> pro(1000);
+static vector<routine*> pro();
 static timelist* tl;
 static int size=0;//time链表的数量
 static bool epoll_start=false;
