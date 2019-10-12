@@ -3,7 +3,7 @@
 
 
 创建一个协程：
-routine* makeroutine(void (*)())
+routine* makeroutine(void (*)(routine *))
 
 开始一个协程：
 void start_routine(routine * );
@@ -21,7 +21,7 @@ int co_read(int , void *, int );
 
 int co_write(int , const void *, size_t );
 
-在协程结束后记得调用 co_return();
+在协程结束后记得调用 co_return(routine *);
 
 
 下面是一个开启协程的例子：
@@ -42,7 +42,7 @@ int main(){
     
     cout<<"main"<<endl;
     
-    loop();//开启所有协程后调用这个函数
+    loop();//开启所有协程后调用这个函数,用作等待创建的协程退出
     
     
 }
