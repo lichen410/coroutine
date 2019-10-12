@@ -25,6 +25,7 @@ void eat(routine *p){
         proc--;
         cout<<"吃掉一个，还剩下："<<proc<<"个"<<endl;
     }
+    co_return(p);
 }
 int main(){
     routine* p1=makeroutine(pro);
