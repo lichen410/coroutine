@@ -3,15 +3,15 @@
 
 
 #define SIZE_OF_STACK 1024*128//每一个协程的栈大小
-using namespace std;
+
+static timelist* tl=new timelist();
 
 static int count=0;
 static bool start_pro=0;
-static int id_of_routine;
+//static int id_of_routine;
 static vector<routine*> reroutine(1000);
 static int resize=0;
 static vector<routine*> pro(1000);
-static timelist* tl;
 static int size=0;//time链表的数量
 static bool epoll_start=false;
 //static char 	buf[100];
@@ -21,10 +21,16 @@ static struct epoll_event evs[1000];
 static int epoll_fd;
 static int num_fd;//epoll树上的数量
 //创建一个协程，返回这个上下文
+
+using namespace std;
+
+
+
 routine* makeroutine(void (*func)(routine *)){
     if(!start_pro){
         start_pro= true;
         ucontext_t *main=(ucontext_t*)malloc(sizeof(ucontext_t));
+        getcontext(main);
         routine *pm=(routine*)malloc(sizeof(routine));
         pm->uct=main;
         pro[size++]=(pm);
@@ -53,26 +59,12 @@ routine* makeroutine(void (*func)(routine *)){
 void co_sleep(int sec){
 
     //1 加入time等待链表
-    if(tl==NULL){
-        tl=(timelist*)malloc(sizeof(timelist));
-    }
-    if(tl->head==NULL){
-        tl->head=(timelistnode*)malloc(sizeof(timelistnode));
-        tl->tail=tl->head;
-        //cout<<size<<endl;
-        tl->head->t=pro[size-1];
-        tl->head->sec=time(0)+sec;
-    }
-    else{
-        timelistnode* t=(timelistnode*)malloc(sizeof(timelistnode));
-        t->t=pro[size-1];
-        t->next=NULL;
-        t->sec=time(0)+sec;
-        tl->tail->next=t;
-        t->pre=tl->tail;
-        tl->tail=t;
-        tl->n++;
-    }
+
+    timelistnode* p_timenode=(timelistnode*)malloc(sizeof(timelistnode));
+    p_timenode->sec=time(0)+sec;
+    p_timenode->t=pro[size-1];
+    tl->add(p_timenode);
+
 
 
     //2。切换
@@ -85,6 +77,7 @@ void co_sleep(int sec){
     //free(pro[size-1]);
     reroutine[++resize]=rep;
     size--;
+    swapcontext(pro[size]->uct,pro[size-1]->uct);
 }
 
 inline void co_net_wait(int fd,bool w){
@@ -133,48 +126,35 @@ int co_write(int fd, const void *buf, size_t nbyte){
     return n;
 }
 void loop(){
-    //cout<<"我来到了loop"<<endl;
+
     for(;;){
         if(!count){
+            free(tl);
             break;
         }
-        //cout<<"s"<<endl;
-        int wait_num=epoll_wait(epoll_fd,evs,num_fd,1);
+        //cout<<"我要去睡"<<tl->min_time<<"秒"<<endl;
+        int wait_num=epoll_wait(epoll_fd,evs,num_fd,tl->min_time);
         for(int i=0;i<wait_num;++i){
             start_routine(m[evs[i].data.fd]);
         }
-        //下面是处理时间队列中到期的协程
-        timelistnode* p=tl->head;
-        if(p!=NULL){
-            if(p->sec<time(0)){
-                //接下来把p给移除
-                routine *ppt = p->t;
-                if(p->pre!=NULL&&p->next!=NULL) {
-                    p->pre->next = p->next;
-                    p->next->pre = p->pre;
-                    //routine *ppt = p->t;
-                    free(p);
-                }
-                else if(p->pre!=NULL){
-                    p->pre->next=NULL;
-                    tl->tail=p->pre;
-                    free(p);
-                }
-                else if(p->next!=NULL){
-                    p->next->pre=NULL;
-                    tl->head=p->next;
-                    free(p);
-                }
-                else {
-                    free(p);
-                    tl->head=NULL;
-                    tl->tail=NULL;
-                }
-                start_routine(ppt);
-                //free(p);
-                //cout<<"第二次回来了！"<<endl;
-            }
+
+
+        //cout<<"下面是处理时间队列中到期的协程"<<endl;
+        vector<timelistnode*> end_timenode=tl->loop_find_end_time();
+
+        for(int i=end_timenode.size()-1;i>=0;--i){
+
+            routine *ppt=end_timenode[i]->t;
+
+            timelistnode* ppn=end_timenode[i];
+
+            end_timenode.pop_back();
+
+            free(ppn);
+            start_routine(ppt);
         }
+
+
         while(resize>0){
             routine *tt=reroutine[resize];
             free(tt->uct->uc_stack.ss_sp);
