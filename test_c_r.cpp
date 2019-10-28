@@ -21,7 +21,7 @@ void pro(routine *p){
 
 void eat(routine *p){
     while(1){
-        if(proc<1) co_sleep(1);
+        while(proc<1) co_sleep(1);
         proc--;
         cout<<"吃掉一个，还剩下："<<proc<<"个"<<endl;
     }
